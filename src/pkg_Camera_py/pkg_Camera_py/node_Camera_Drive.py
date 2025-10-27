@@ -10,6 +10,7 @@ class MyNode(Node):
         self.get_logger().info("Camera Drive node started.")
         self.create_timer(0.1, self.timer_callback)  # call function 'timer_callback' every 0.1 sec 
 
+    # timer callback function
     def timer_callback(self):
         self.get_logger().info("Waiting " + str(self.counter_ / 10) + " sec")
         self.counter_ += 1
