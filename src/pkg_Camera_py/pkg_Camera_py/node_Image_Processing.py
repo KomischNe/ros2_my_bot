@@ -7,7 +7,7 @@ class MyNode(Node):
     def __init__(self):
         super().__init__("node_image_processing")
         self.get_logger().info("Image Processing node started.")
-
+             
 
 def main(args=None):
     rclpy.init(args=args)
