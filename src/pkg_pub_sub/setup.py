@@ -25,7 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'wheels = pkg_pub_sub.wheels:main',
-            'speed_controller = pkg_pub_sub.speed_controller:main'
+            'speed_controller = pkg_pub_sub.speed_controller:main',
+            'speed_plotter = pkg_pub_sub.speed_plotter:main'
         ],
     },
 )
