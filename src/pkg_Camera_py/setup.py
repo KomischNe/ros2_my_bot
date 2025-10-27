@@ -26,7 +26,8 @@ setup(
         'console_scripts': [
             'node_Camera_Drive = pkg_Camera_py.node_Camera_Drive:main',
             'node_Image_Processing = pkg_Camera_py.node_Image_Processing:main',
-            'robot_news_station = pkg_Camera_py.robot_news_station:main'
+            'robot_news_station = pkg_Camera_py.robot_news_station:main',
+            'smartphone = pkg_Camera_py.smartphone:main'
         ],
     
     },

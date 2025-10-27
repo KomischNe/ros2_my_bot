@@ -7,7 +7,7 @@ class RobotNewsStationNode(Node):
         super().__init__("robot_news_station") 
         self.counter_ = 0
         self.robot_name_ = "C3PO"
-        self.publisher_ = self.create_publisher(String, "robot_news", 10)
+        self.publisher_ = self.create_publisher(String, "robot_news", 10) # topic name
         self.timer_ = self.create_timer(1.0, self.publish_news)
         self.get_logger().info("Robot News Station has been published.")
     
