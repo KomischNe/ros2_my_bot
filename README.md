@@ -11,6 +11,7 @@ Run the following command in your terminal to install ROS2 Jazzy:
 wget http://fishros.com/install -O fishros && . fishros
 ```
 
+
 ### ROS2 learning sources
 
 - **source 1: fundamental course**
@@ -25,5 +26,5 @@ https://www.youtube.com/watch?v=OWeLUSzxMsw&list=PLunhqkrRNRhYAffV8JDiFOatQXuU-N
 
 - **source 3: download course [pwd=r53n]**
 ```bash
-https://pan.baidu.com/s/1GHoWFpyvCaF3llq_CTmtCg?pwd=r53n
+https://pan.baidu.com/s/1GHoWFpyvCaF3lIq_CTmtCg?pwd=r53n
 ```
