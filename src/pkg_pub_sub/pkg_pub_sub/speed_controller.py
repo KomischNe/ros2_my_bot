@@ -17,16 +17,17 @@ class SpeedControllerNode(Node): # [node name] got
         self.get_logger().info("Speed Monitor is running.")
 
     def get_speed(self, value:Float32):
-        self.get_logger().info(f"received speed: {value.data:.2f}")
-        msg = Float32()
+        target = 4.0
+        error = target - value.data
+        k_p = 1
 
-        if value.data > 5.0:
-            msg.data = -0.12
-        elif value.data < 4.9:
-            msg.data = 0.05
-        else:
-            msg.data = 0.0
+        correction = k_p * error
+        msg = Float32()
+        msg.data = correction
         self.publisher_.publish(msg)
+
+        self.get_logger().info(f"received speed: {value.data:.2f}, correction: {correction:.3f}")
+        
 
 
              
