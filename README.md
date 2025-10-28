@@ -9,7 +9,7 @@ Run the following command in your terminal to install ROS2 Jazzy:
 
 ```bash
 wget http://fishros.com/install -O fishros && . fishros
-
+```
 
 ### ROS2 learning sources
 
