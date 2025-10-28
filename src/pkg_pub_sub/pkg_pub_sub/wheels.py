@@ -31,7 +31,7 @@ class WheelsNode(Node): # [node name] got
         if self.speed_generator_ < 3.0:
             self.speed_generator_ += self.speed_generator_* 0.02
         else:
-            self.speed_generator_ += 0.1 * self.speed_correction_
+            self.speed_generator_ += 0.05 * self.speed_correction_
 
         msg = Float32()
         msg.data = self.speed_generator_
