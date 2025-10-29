@@ -25,7 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'add_two_ints_server = pkg_server_client.add_two_ints_server:main',
-            'add_two_ints_client_no_oop = pkg_server_client.add_two_ints_client_no_oop:main'
+            'add_two_ints_client_no_oop = pkg_server_client.add_two_ints_client_no_oop:main',
+            'add_two_ints_client = pkg_server_client.add_two_ints_client:main'
         ],
     },
 )
