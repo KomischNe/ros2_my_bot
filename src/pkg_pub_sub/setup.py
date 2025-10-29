@@ -26,7 +26,10 @@ setup(
         'console_scripts': [
             'wheels = pkg_pub_sub.wheels:main',
             'speed_controller = pkg_pub_sub.speed_controller:main',
-            'speed_plotter = pkg_pub_sub.speed_plotter:main'
+            'speed_plotter = pkg_pub_sub.speed_plotter:main',
+            'number_publisher = pkg_pub_sub.number_publisher:main',
+            'number_counter = pkg_pub_sub.number_counter:main'
+            
         ],
     },
 )
