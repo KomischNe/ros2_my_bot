@@ -15,6 +15,8 @@ class Player1Node(Node): # MODIFY NAME
         self.night_start_sub_ = self.create_subscription(String, 'night_start', self.night_start_callback, 10)
         self.wolf_action_pub_ = self.create_publisher(String, 'wolf_action', 10)
 
+        self.dead_sub_ = self.create_subscription(String, 'dead', self.dead_callback, 10)
+
         self.get_logger().info(f"ready")
         self.create_timer(0.5, self.announce_ready)
 
@@ -30,6 +32,8 @@ class Player1Node(Node): # MODIFY NAME
             self.get_logger().info(f"Your role is: {self.role_}")
 
     def night_start_callback(self, msg):
+        if self.state_ == 'dead':
+            return  # ignore all night messages if dead
         """Respond to game master's announcements"""
         data = msg.data
         self.get_logger().info(data)
@@ -60,6 +64,14 @@ class Player1Node(Node): # MODIFY NAME
         msg.data = f"{self.name}:{target}, action:done"
         self.wolf_action_pub_.publish(msg)
 
+
+
+    def dead_callback(self, msg):
+        dead_players = [p.strip() for p in msg.data.split(',')]
+        if self.name in dead_players:
+            self.get_logger().info("💀 YOU'RE DEAD")
+            self.state_ = 'dead'
+            
              
 
 def main(args=None):

@@ -15,6 +15,7 @@ class GameMasterNode(Node): # MODIFY NAME
         self.player_roles_ = {}    
         self.player_action_ = {} 
         self.wolf_action_ = {} 
+        self.dead_players_ = []
 
         self.roles_assigned_ = False
         self.game_phase_ = "waiting"  # can be 'waiting', 'night', 'day', 'end'
@@ -24,6 +25,9 @@ class GameMasterNode(Node): # MODIFY NAME
         # night actions
         self.night_start_pub_ = self.create_publisher(String, 'night_start', 10)
         self.wolf_action_sub_ = self.create_subscription(String, 'wolf_action', self.wolf_action_callback, 10)
+
+        # day actions
+        self.dead_pub_ = self.create_publisher(String, 'dead', 10)
 
         self.get_logger().info("WOLF GAME (5 players)")
         self.get_logger().info("4 villagers, 1 wolf")
@@ -77,30 +81,29 @@ class GameMasterNode(Node): # MODIFY NAME
         msg.data = "🌙 Night phase begins!"
         self.night_start_pub_.publish(msg)
         self.get_logger().info(msg.data)
+        self.get_logger().info("🐺 Wolf action...")
 
     def wolf_action_callback(self, msg):
         voter, target = msg.data.split(':')[0], msg.data.split(':')[1].split(',')[0]
 
-        # Record vote only if voter is a wolf and alive
-        if self.player_roles_.get(voter) == "wolf" and self.player_states_.get(voter) == 'alive':
-            # Store wolf vote
-            self.wolf_action_[voter] = target
-            # Mark wolf action as done
-            self.player_action_[voter] = "done"
-            # announce who is killed
-            self.get_logger().info(f"Player{target} is killed.")
+        # Store wolf vote
+        self.wolf_action_[voter] = target
+        # Mark wolf action as done
+        self.player_action_[voter] = "done"
+        self.get_logger().info(f"done")
+        time.sleep(2)
 
-            # Mark target player as dead
-            self.player_states_[f"player{target}"] = 'dead'
-            
-            # Check if all night actions are done
-            self.night_done()
+        # Mark target player as dead
+        self.player_states_[f"player{target}"] = 'dead'
+        
+        # Check if all night actions are done
+        self.night_done()
 
 
     def night_done(self):     
         if all(action is not None for action in self.player_action_.values()):   
             self.get_logger().info("🌞 Night actions complete. Starting day phase...")
-            time.sleep(1)
+            time.sleep(2)
             self.start_day_phase()
         
 
@@ -109,9 +112,35 @@ class GameMasterNode(Node): # MODIFY NAME
     def start_day_phase(self):
         self.game_phase_ = "day"
 
+        # Record dead players
+        # Keep a list of players who were already dead
+        previous_dead = getattr(self, 'previous_dead_', set())
+        # Current dead players
+        dead_players = {player for player, state in self.player_states_.items() if state == 'dead'}
+        # Players who just died last night
+        newly_dead_player = dead_players - previous_dead
+        # Update the previous_dead set
+        self.previous_dead_ = dead_players
+
+        if newly_dead_player:
+            self.get_logger().info(f"💀 {', '.join(newly_dead_player)} is killed")
+        else:
+            self.get_logger().info("💀 No one died last night")
+        
+
+        # publish dead players
+        for player in newly_dead_player:
+            msg = String()
+            msg.data = player
+            self.dead_pub_.publish(msg)
+            # small delay to ensure messages are sent
+            time.sleep(2)
+        
+
         # List alive players
         alive_players = [player for player, state in self.player_states_.items() if state == 'alive']
-        self.get_logger().info(f"🌞 Day phase begins! Alive players: {', '.join(alive_players)}")
+        self.get_logger().info(f"🟢 {', '.join(alive_players)} alive")
+        time.sleep(2)
 
         # Count alive wolves and humans
         alive_wolves = [p for p in alive_players if self.player_roles_[p] == "wolf"]
@@ -119,19 +148,20 @@ class GameMasterNode(Node): # MODIFY NAME
 
         # Check game end conditions
         if len(alive_wolves) >= len(alive_humans):
-            self.get_logger().info("🐺 Wolves win! Game over.")
+            self.get_logger().info("🐺 Wolves win! 🐺 Game over 🐺")
             self.game_phase_ = "end"
             return
         elif len(alive_wolves) == 0:
-            self.get_logger().info("🏠 Humans win! Game over.")
+            self.get_logger().info("🏠 Humans win! 🏠 Game over 🏠")
             self.game_phase_ = "end"
             return
         else:
             self.get_logger().info("Game continues...")
+            time.sleep(2)
 
-        self.get_logger().info("This is day action, gaming continues...")
+        self.get_logger().info("This is day action...")
         time.sleep(3)
-        
+
         # Start next night
         self.start_night_phase()
         
