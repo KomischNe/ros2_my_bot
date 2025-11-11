@@ -66,12 +66,12 @@ class GameMasterNode(Node): # MODIFY NAME
     def start_night_phase(self):
         self.game_phase_ = "night"
         # self.night_done_players_.clear()
-        for i in range(3,0,-1):
+        for i in range(30,0,-1):
             msg = String()
-            msg.data = f"Night start in {i} s"
+            msg.data = f"Night start in {i/10} s"
             self.night_start_pub_.publish(msg)
             self.get_logger().info(msg.data)
-            time.sleep(1)
+            time.sleep(0.1)
         
         msg = String()
         msg.data = "🌙 Night phase begins!"
@@ -79,7 +79,7 @@ class GameMasterNode(Node): # MODIFY NAME
         self.get_logger().info(msg.data)
 
     def wolf_action_callback(self, msg):
-        voter, target = msg.data.split(':')[0], msg.data.split(':')[1]
+        voter, target = msg.data.split(':')[0], msg.data.split(':')[1].split(',')[0]
 
         # Record vote only if voter is a wolf and alive
         if self.player_roles_.get(voter) == "wolf" and self.player_states_.get(voter) == 'alive':
@@ -110,12 +110,29 @@ class GameMasterNode(Node): # MODIFY NAME
         self.game_phase_ = "day"
 
         # List alive players
+        alive_players = [player for player, state in self.player_states_.items() if state == 'alive']
+        self.get_logger().info(f"🌞 Day phase begins! Alive players: {', '.join(alive_players)}")
 
+        # Count alive wolves and humans
+        alive_wolves = [p for p in alive_players if self.player_roles_[p] == "wolf"]
+        alive_humans = [p for p in alive_players if self.player_roles_[p] != "wolf"]
 
+        # Check game end conditions
+        if len(alive_wolves) >= len(alive_humans):
+            self.get_logger().info("🐺 Wolves win! Game over.")
+            self.game_phase_ = "end"
+            return
+        elif len(alive_wolves) == 0:
+            self.get_logger().info("🏠 Humans win! Game over.")
+            self.game_phase_ = "end"
+            return
+        else:
+            self.get_logger().info("Game continues...")
 
-        
-        self.get_logger().info("this is day action, gaming continue...")
+        self.get_logger().info("This is day action, gaming continues...")
         time.sleep(3)
+        
+        # Start next night
         self.start_night_phase()
         
 
