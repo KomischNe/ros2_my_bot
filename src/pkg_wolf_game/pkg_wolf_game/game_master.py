@@ -16,6 +16,7 @@ class GameMasterNode(Node): # MODIFY NAME
         self.player_action_ = {} 
         self.wolf_action_ = {} 
         self.dead_players_ = []
+        self.votes_ = {}
 
         self.roles_assigned_ = False
         self.game_phase_ = "waiting"  # can be 'waiting', 'night', 'day', 'end'
@@ -28,6 +29,8 @@ class GameMasterNode(Node): # MODIFY NAME
 
         # day actions
         self.dead_pub_ = self.create_publisher(String, 'dead', 10)
+        self.day_vote_start_pub_ = self.create_publisher(String, 'day_vote', 10)
+        self.vote_result_sub_ = self.create_subscription(String, 'vote_result', self.vote_result_callback, 10)
 
         self.get_logger().info("WOLF GAME (5 players)")
         self.get_logger().info("4 villagers, 1 wolf")
@@ -125,7 +128,7 @@ class GameMasterNode(Node): # MODIFY NAME
         if newly_dead_player:
             self.get_logger().info(f"💀 {', '.join(newly_dead_player)} is killed")
         else:
-            self.get_logger().info("💀 No one died last night")
+            self.get_logger().info("🟢 No one died last night")
         
 
         # publish dead players
@@ -138,13 +141,13 @@ class GameMasterNode(Node): # MODIFY NAME
         
 
         # List alive players
-        alive_players = [player for player, state in self.player_states_.items() if state == 'alive']
-        self.get_logger().info(f"🟢 {', '.join(alive_players)} alive")
+        self.alive_players = [player for player, state in self.player_states_.items() if state == 'alive']
+        self.get_logger().info(f"🟢 {', '.join(self.alive_players)} alive")
         time.sleep(2)
 
         # Count alive wolves and humans
-        alive_wolves = [p for p in alive_players if self.player_roles_[p] == "wolf"]
-        alive_humans = [p for p in alive_players if self.player_roles_[p] != "wolf"]
+        alive_wolves = [p for p in self.alive_players if self.player_roles_[p] == "wolf"]
+        alive_humans = [p for p in self.alive_players if self.player_roles_[p] != "wolf"]
 
         # Check game end conditions
         if len(alive_wolves) >= len(alive_humans):
@@ -159,8 +162,49 @@ class GameMasterNode(Node): # MODIFY NAME
             self.get_logger().info("Game continues...")
             time.sleep(2)
 
-        self.get_logger().info("This is day action...")
-        time.sleep(3)
+        ### vote phase
+        self.start_day_vote()
+
+
+    def start_day_vote(self):
+        if self.game_phase_ == "end":
+            return
+        
+        self.get_logger().info("Day vote start. Choose a player...")
+
+        # publish alive player msg to vote
+        alive_list_str = ', '.join(self.alive_players)
+
+        msg = String()
+        msg.data = f"Choose a player from: {alive_list_str}"
+        self.day_vote_start_pub_.publish(msg)
+
+        
+    def vote_result_callback(self, msg):
+        if self.game_phase_ == "end":
+            return
+        
+        voter, target = msg.data.split(':')
+
+        # Store the vote
+        self.get_logger().info(f"🗳️ {voter} has voted")
+        self.player_action_[voter] = "voted"
+        self.votes_[voter] = target
+
+        # Check if all alive players have voted
+        alive_players = [p for p, state in self.player_states_.items() if state == 'alive']
+        if all(p in self.votes_ for p in alive_players):
+            self.get_logger().info("✅ All players have voted. Counting votes...")
+            time.sleep(3)
+            self.count_votes()
+            
+
+    def count_votes(self):
+        if self.game_phase_ == "end":
+            return
+        
+
+
 
         # Start next night
         self.start_night_phase()

@@ -16,6 +16,8 @@ class Player4Node(Node): # MODIFY NAME
         self.wolf_action_pub_ = self.create_publisher(String, 'wolf_action', 10)
 
         self.dead_sub_ = self.create_subscription(String, 'dead', self.dead_callback, 10)
+        self.day_vote_start_sub_ = self.create_subscription(String, 'day_vote', self.day_vote_callback, 10)
+        self.vote_result_pub_ = self.create_publisher(String, 'vote_result', 10)
 
         self.get_logger().info(f"ready")
         self.create_timer(0.5, self.announce_ready)
@@ -71,6 +73,46 @@ class Player4Node(Node): # MODIFY NAME
         if self.name in dead_players:
             self.get_logger().info("💀 YOU'RE DEAD")
             self.state_ = 'dead'
+
+
+    def day_vote_callback(self, msg):
+        if self.state_ == 'dead':
+            return  # ignore all messages if dead
+        
+        vote_start = msg.data
+        self.get_logger().info(f"📢 {vote_start}")
+
+        # Get alive player list
+        alive_str = vote_start.split(':', 1)[1].strip()
+        alive_players = [p.strip() for p in alive_str.split(',')]
+
+        # Extract the numeric part (e.g., "player4" → 4)
+        alive_numbers = [int(p.replace('player', '')) for p in alive_players]
+
+        print("\nAlive players:")
+        for p in alive_players:
+            print(f"{p.replace('player', '')}: {p}")
+        print("0: Don't vote for anyone")
+
+        # Valid choices include 0 for skip vote
+        valid_choices = alive_numbers + [0]
+
+        # Get valid numeric input
+        choice = None
+        while choice not in valid_choices:
+            try:
+                choice = int(input(f"Enter your vote number ({', '.join(map(str, valid_choices))}): "))
+            except ValueError:
+                continue  # ignore invalid input
+        
+        # result
+        chosen_player = f"player{choice}"
+
+
+        # Publish vote
+        msg_out = String()
+        msg_out.data = f"{self.name}:{chosen_player}"
+        self.vote_result_pub_.publish(msg_out)
 
              
 
